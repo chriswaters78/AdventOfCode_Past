@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "2020_20": {
+      "commandName": "Project",
+      "commandLineArgs": "test"
+    }
+  }
+}

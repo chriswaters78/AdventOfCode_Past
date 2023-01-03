@@ -1,10 +1,13 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Text;
 
 class Program
 {
     public static void Main(string[] args)
     {
-        var tiles = File.ReadAllText("input.txt").Split($"{Environment.NewLine}{Environment.NewLine}").Select(str => str.Split(Environment.NewLine))
+        Stopwatch watch = new Stopwatch();
+        watch.Start();
+        var tiles = File.ReadAllText($"{args[0]}.txt").Split($"{Environment.NewLine}{Environment.NewLine}").Select(str => str.Split(Environment.NewLine))
             .ToDictionary(sp => long.Parse(sp[0][5..^1]), sp => sp.Skip(1).Select(str => str.ToArray()).ToArray());
 
         var size = (int)Math.Sqrt(tiles.Count);
@@ -16,15 +19,97 @@ class Program
 
         var solve = getSolutions(tiles, 0, 0, board);
 
-        var part1 = solve.First()[0][0].Value.tileNo * solve.First()[0][2].Value.tileNo * solve.First()[2][0].Value.tileNo * solve.First()[2][2].Value.tileNo;
+        var part1 = solve.First()[0][0].Value.tileNo * solve.First()[0][size-1].Value.tileNo * solve.First()[size - 1][0].Value.tileNo * solve.First()[size - 1][size - 1].Value.tileNo;
         Console.WriteLine($"Found {solve.Count} solutions, first solution:");
         Console.WriteLine(printBoard(tiles, solve.First()));
 
-        Console.WriteLine($"Part1 {part1}");
+        Console.WriteLine($"Part1 {part1} in {watch.ElapsedMilliseconds}ms");
 
         //get full image
         //try all rotations
         //and count sea monsters
+
+        char[][] fullImage = new char[8 * size][];
+        for (int r = 0; r < size; r++)
+        {
+            for (int c = 0; c < size; c++)
+            {
+                var tileNo = solve.First()[r][c].Value.tileNo;
+                var orientation = solve.First()[r][c].Value.orientation;
+                var tile = rotateImage(rotations[orientation], tiles[tileNo]);
+                for (int ri = 1; ri < 9; ri++)
+                {
+                    fullImage[8 * r + ri - 1] = new char[8 * size];
+                    for (int ci = 1; ci < 9; ci++)
+                    {
+                        fullImage[8 * r + ri - 1][8 * c + ci - 1] = tile[ri][ci];
+                    }
+                }
+            }
+        }
+
+        //01234567890123456789
+        //                  # 
+        //#    ##    ##    ###
+        // #  #  #  #  #  #   
+        var seeMonster = new char[3][];
+        seeMonster[0] = new char[20];
+        seeMonster[1] = new char[20];
+        seeMonster[2] = new char[20];
+        seeMonster[0][18] = '#';
+        seeMonster[1][0] = '#';
+        seeMonster[1][5] = '#';
+        seeMonster[1][6] = '#';
+        seeMonster[1][11] = '#';
+        seeMonster[1][12] = '#';
+        seeMonster[1][17] = '#';
+        seeMonster[1][18] = '#';
+        seeMonster[1][19] = '#';
+        seeMonster[2][1] = '#';
+        seeMonster[2][4] = '#';
+        seeMonster[2][7] = '#';
+        seeMonster[2][10] = '#';
+        seeMonster[2][13] = '#';
+        seeMonster[2][16] = '#';
+
+        HashSet<(int r, int c)> foundMonsters = new HashSet<(int r, int c)>();
+        for (int rot = 0; rot < rotations.Length; rot++)
+        {
+            var rotatedImage = rotateImage(rotations[rot], fullImage);
+            for (int sr = 0; sr < fullImage.Length - seeMonster.Length; sr++)
+            {
+                for (int sc = 0; sc < fullImage[0].Length - seeMonster[0].Length; sc++)
+                {
+                    bool allMatch = true;
+                    var partsOfMonster = new List<(int r, int c)>();
+                    for (int r = 0; r < seeMonster.Length; r++)
+                    {
+                        for (int c = 0; c < seeMonster.First().Length; c++)
+                        {
+                            if (seeMonster[r][c] == '#')
+                            {
+                                if (rotatedImage[sr + r][sc + c] != '#')
+                                {
+                                    allMatch = false;
+                                }
+                                partsOfMonster.Add((sr + r, sc + c));
+                            }
+                        }
+                    }
+                    if (allMatch)
+                    {
+                        foreach (var monster in partsOfMonster)
+                        {
+                            foundMonsters.Add(monster);
+                        }
+                    }
+                }
+            }
+            Console.WriteLine($"Found monster count at rot {rot}: {foundMonsters.Count}");
+            var part2 = size * size * 8 * 8 - foundMonsters.Count;
+            Console.WriteLine($"Part 2: {part2}");
+        }
+
     }
 
     private static int[][][] rotations = new int[][][] {
@@ -71,30 +156,30 @@ class Program
         var rotatedImage = new Dictionary<(int r, int c), (decimal r, decimal c)>();
         decimal yoffset = ((decimal) image.Length - 1)/ 2m;
         decimal xoffset = ((decimal) image.First().Length - 1) / 2m;
-        for (int r = 0; r < 10; r++)
+        for (int r = 0; r < image.Length; r++)
         {
-            for (int c = 0; c < 10; c++)
+            for (int c = 0; c < image.First().Length; c++)
             {
                 rotatedImage[(r,c)] = (r - yoffset, c - xoffset);
             }
         }
 
-        for (int r = 0; r < 10; r++)
+        for (int r = 0; r < image.Length; r++)
         {
-            for (int c = 0; c < 10; c++)
+            for (int c = 0; c < image.First().Length; c++)
             {
                 rotatedImage[(r,c)] = (rotatedImage[(r,c)].r * rotation[0][0] + rotatedImage[(r, c)].c * rotation[0][1], rotatedImage[(r, c)].r * rotation[1][0] + rotatedImage[(r, c)].c * rotation[1][1]);
             }
         }
 
-        var finalImage = new char[10][];
-        for (int r = 0; r < 10; r++)
+        var finalImage = new char[image.Length][];
+        for (int r = 0; r < image.Length; r++)
         {
-            finalImage[r] = new char[10];
+            finalImage[r] = new char[image.First().Length];
         }
-        for (int r = 0; r < 10; r++)
+        for (int r = 0; r < image.Length; r++)
         {
-            for (int c = 0; c < 10; c++)
+            for (int c = 0; c < image.First().Length; c++)
             {
                 finalImage[(int) (rotatedImage[(r, c)].r + yoffset)][(int) (rotatedImage[(r, c)].c + xoffset)] = image[r][c];
             }
@@ -105,7 +190,7 @@ class Program
 
     private static List<(long tileNo, int orientation)?[][]> getSolutions(Dictionary<long, char[][]> tiles, int r, int c, (long tileNo, int orientation)?[][] board)
     {
-        Console.WriteLine($"Solving r:{r}, c:{c}");
+        //Console.WriteLine($"Solving r:{r}, c:{c}");
 
         if (r == board.Length)
         {
@@ -154,7 +239,7 @@ class Program
             }
         }
 
-        Console.WriteLine($"Solved r:{r}, c:{c}. Boards {newBoards.Count}");
+        //Console.WriteLine($"Solved r:{r}, c:{c}. Boards {newBoards.Count}");
         return newBoards.SelectMany(newBoard => getSolutions(tiles, c == board.Length - 1 ? (r + 1) : r, c == board.Length - 1 ? 0 : (c + 1), newBoard)).ToList();
     }
 
