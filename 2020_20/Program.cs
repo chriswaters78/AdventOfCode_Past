@@ -17,7 +17,16 @@ class Program
             board[r] = new (long tileNo, int orientation)?[size];
         }
 
-        var solution = getSolutions(tiles, 0, 0, board);
+        var tileRotations = new Dictionary<(long tileNo, int orientation), char[][]>();
+        for (int r = 0; r < rotations.Length; r++)
+        {
+            foreach (var tile in tiles)
+            {
+                tileRotations.Add((tile.Key, r), rotateImage(rotations[r], tile.Value));
+            }
+        }
+
+        var solution = getSolutions(tileRotations, 0, 0, board);
 
         var part1 = solution.First()[0][0].Value.tileNo * solution.First()[0][size-1].Value.tileNo * solution.First()[size - 1][0].Value.tileNo * solution.First()[size - 1][size - 1].Value.tileNo;
         Console.WriteLine($"Found {solution.Count} solutions, first solution:");
@@ -131,7 +140,7 @@ class Program
             }
         }
         //var part2 = size * size * 8 * 8 - foundMonsters.Count;
-        Console.WriteLine($"Part 2: {part2}");
+        Console.WriteLine($"Part 2: {part2} in {watch.ElapsedMilliseconds}ms");
     }
 
     private static int[][][] rotations = new int[][][] {
@@ -210,7 +219,7 @@ class Program
         return finalImage;
     }
 
-    private static List<(long tileNo, int orientation)?[][]> getSolutions(Dictionary<long, char[][]> tiles, int r, int c, (long tileNo, int orientation)?[][] board)
+    private static List<(long tileNo, int orientation)?[][]> getSolutions(Dictionary<(long, int), char[][]> tileRotations, int r, int c, (long tileNo, int orientation)?[][] board)
     {
         //Console.WriteLine($"Solving r:{r}, c:{c}");
 
@@ -221,7 +230,7 @@ class Program
 
         var newBoards = new List<(long tileNo, int orientation)?[][]>();
         var usedTiles = new HashSet<long>(board.SelectMany(i => i).Where(i => i.HasValue).Select(i => i.Value.tileNo));
-        foreach (var (tileNo, image) in tiles.Where(t => !usedTiles.Contains(t.Key)))
+        foreach (var ((tileNo, orientation), image) in tileRotations.Where(t => t.Key.Item2 == 0 && !usedTiles.Contains(t.Key.Item1)))
         {
             //try and fit this tile at r,c in every rotation or flip
             //foreach that fits, clone a new board with the new tile, and call getSolutions recursively
@@ -229,11 +238,11 @@ class Program
             {
                 bool fits = true;
                 //does top edge and left hand edge fit
-                var rotatedImage = rotateImage(rotations[ri], tiles[tileNo]);
+                var rotatedImage = tileRotations[(tileNo, ri)];
                 if (r != 0)
                 {
                     //check top edge
-                    var matchingTile = rotateImage(rotations[board[r - 1][c].Value.orientation], tiles[board[r - 1][c].Value.tileNo]);
+                    var matchingTile = tileRotations[(board[r - 1][c].Value.tileNo, board[r - 1][c].Value.orientation)];
                     if (!rotatedImage.First().SequenceEqual(matchingTile.Last()))
                     {
                         fits = false;
@@ -242,7 +251,7 @@ class Program
                 if (c != 0)
                 {
                     //check left edge
-                    var matchingTile = rotateImage(rotations[board[r][c - 1].Value.orientation], tiles[board[r][c - 1].Value.tileNo]);
+                    var matchingTile = tileRotations[(board[r][c - 1].Value.tileNo, board[r][c - 1].Value.orientation)];
                     if (!rotatedImage.Select(arr => arr.First()).SequenceEqual(matchingTile.Select(arr => arr.Last())))
                     {
                         fits = false;
@@ -262,7 +271,7 @@ class Program
         }
 
         //Console.WriteLine($"Solved r:{r}, c:{c}. Boards {newBoards.Count}");
-        return newBoards.SelectMany(newBoard => getSolutions(tiles, c == board.Length - 1 ? (r + 1) : r, c == board.Length - 1 ? 0 : (c + 1), newBoard)).ToList();
+        return newBoards.SelectMany(newBoard => getSolutions(tileRotations, c == board.Length - 1 ? (r + 1) : r, c == board.Length - 1 ? 0 : (c + 1), newBoard)).ToList();
     }
 
     static string printImage(char[][] image)
