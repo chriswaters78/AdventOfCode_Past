@@ -17,11 +17,11 @@ class Program
             board[r] = new (long tileNo, int orientation)?[size];
         }
 
-        var solve = getSolutions(tiles, 0, 0, board);
+        var solution = getSolutions(tiles, 0, 0, board);
 
-        var part1 = solve.First()[0][0].Value.tileNo * solve.First()[0][size-1].Value.tileNo * solve.First()[size - 1][0].Value.tileNo * solve.First()[size - 1][size - 1].Value.tileNo;
-        Console.WriteLine($"Found {solve.Count} solutions, first solution:");
-        Console.WriteLine(printBoard(tiles, solve.First()));
+        var part1 = solution.First()[0][0].Value.tileNo * solution.First()[0][size-1].Value.tileNo * solution.First()[size - 1][0].Value.tileNo * solution.First()[size - 1][size - 1].Value.tileNo;
+        Console.WriteLine($"Found {solution.Count} solutions, first solution:");
+        Console.WriteLine(printBoard(tiles, solution.First()));
 
         Console.WriteLine($"Part1 {part1} in {watch.ElapsedMilliseconds}ms");
 
@@ -32,14 +32,17 @@ class Program
         char[][] fullImage = new char[8 * size][];
         for (int r = 0; r < size; r++)
         {
+            for (int ri = 1; ri < 9; ri++)
+            {
+                fullImage[8 * r + ri - 1] = new char[8 * size];
+            }
             for (int c = 0; c < size; c++)
             {
-                var tileNo = solve.First()[r][c].Value.tileNo;
-                var orientation = solve.First()[r][c].Value.orientation;
+                var tileNo = solution.First()[r][c].Value.tileNo;
+                var orientation = solution.First()[r][c].Value.orientation;
                 var tile = rotateImage(rotations[orientation], tiles[tileNo]);
                 for (int ri = 1; ri < 9; ri++)
                 {
-                    fullImage[8 * r + ri - 1] = new char[8 * size];
                     for (int ci = 1; ci < 9; ci++)
                     {
                         fullImage[8 * r + ri - 1][8 * c + ci - 1] = tile[ri][ci];
@@ -73,9 +76,13 @@ class Program
         seeMonster[2][16] = '#';
 
         HashSet<(int r, int c)> foundMonsters = new HashSet<(int r, int c)>();
+        char[][] rotatedImage = null;
         for (int rot = 0; rot < rotations.Length; rot++)
         {
-            var rotatedImage = rotateImage(rotations[rot], fullImage);
+            Console.WriteLine($"Checking board orientation {rot}");
+            //this isn't rotating correctly
+            rotatedImage = rotateImage(rotations[rot], fullImage);
+            Console.WriteLine(printImage(rotatedImage));
             for (int sr = 0; sr < fullImage.Length - seeMonster.Length; sr++)
             {
                 for (int sc = 0; sc < fullImage[0].Length - seeMonster[0].Length; sc++)
@@ -106,10 +113,25 @@ class Program
                 }
             }
             Console.WriteLine($"Found monster count at rot {rot}: {foundMonsters.Count}");
-            var part2 = size * size * 8 * 8 - foundMonsters.Count;
-            Console.WriteLine($"Part 2: {part2}");
+            if (foundMonsters.Count > 0)
+            {
+                break;
+            }
         }
 
+        int part2 = 0;
+        for (int r = 0; r < rotatedImage.Length; r++)
+        {
+            for (int c = 0; c < rotatedImage.First().Length; c++)
+            {
+                if (rotatedImage[r][c] == '#' && !foundMonsters.Contains((r, c)))
+                {
+                    part2++;
+                }
+            }
+        }
+        //var part2 = size * size * 8 * 8 - foundMonsters.Count;
+        Console.WriteLine($"Part 2: {part2}");
     }
 
     private static int[][][] rotations = new int[][][] {
@@ -242,6 +264,21 @@ class Program
         //Console.WriteLine($"Solved r:{r}, c:{c}. Boards {newBoards.Count}");
         return newBoards.SelectMany(newBoard => getSolutions(tiles, c == board.Length - 1 ? (r + 1) : r, c == board.Length - 1 ? 0 : (c + 1), newBoard)).ToList();
     }
+
+    static string printImage(char[][] image)
+    {
+        StringBuilder imageStr = new StringBuilder();
+        for (int rb = 0; rb < image.Length; rb++)
+        {
+            for (int cb = 0; cb < image.First().Length; cb++)
+            {
+                imageStr.Append(image[rb][cb]);
+            }
+            imageStr.AppendLine();
+        }
+
+        return imageStr.ToString();
+    }   
 
     static string printBoard(Dictionary<long, char[][]> tiles, (long tileNo, int orientation)?[][] board)
     {
