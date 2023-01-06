@@ -1,6 +1,6 @@
 ﻿using IntCode;
 
-var memory = File.ReadAllText("input.txt").Split(",").Select(int.Parse).ToArray();
+var memory = File.ReadAllText("input.txt").Split(",").Select(long.Parse).ToArray();
 
 Console.WriteLine($"*** START ***");
 var computer = new Computer(memory, ConsoleEnumerable.GetConsoleEnumerable());

@@ -2,19 +2,24 @@
 {
     public class Computer
     {
-        public readonly int[] Memory;
-        private int ip;
-        private IEnumerator<int> inputEnumerator;
+        public readonly long[] Memory;
+        private long ip;
+        private IEnumerator<long> inputEnumerator;
+        private string name;
 
+        public Computer(long[] initialMemory, IEnumerable<long> inputs) : this("COMP", initialMemory, inputs)
+        {
+        }
 
-        public Computer(int[] initialMemory, IEnumerable<int> inputs)
+        public Computer(string name, long[] initialMemory, IEnumerable<long> inputs)
         {
             Memory = initialMemory.ToArray();
             ip = 0;
             inputEnumerator = inputs.GetEnumerator();
+            this.name = name;
         }
 
-        public IEnumerable<int> Run()
+        public IEnumerable<long> Run()
         {
             while (true)
             {
@@ -55,12 +60,15 @@
                         //}
                         inputEnumerator.MoveNext();
                         var input = inputEnumerator.Current;
+                        Console.WriteLine($"Computer {name} received {input}");
 
                         Memory[Memory[ip + 1]] = input;
                         ip += 2;
                         break;
                     case 4:
-                        yield return getValue(Memory[ip+1], parameterMode1);
+                        var output = -getValue(Memory[ip + 1], parameterMode1);
+                        Console.WriteLine($"Computer {name} output {output}");
+                        yield return output;
                         ip += 2;
                         break;
                     case 5:
@@ -100,7 +108,7 @@
             yield break;
         }
 
-        private int getValue(int parameter, int parameterMode)
+        private long getValue(long parameter, long parameterMode)
         {
             switch (parameterMode)
             {
