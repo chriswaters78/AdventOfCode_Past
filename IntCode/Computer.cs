@@ -4,15 +4,17 @@
     {
         public readonly int[] Memory;
         private int ip;
+        private IEnumerator<int> inputEnumerator;
 
 
-        public Computer(int[] initialMemory)
+        public Computer(int[] initialMemory, IEnumerable<int> inputs)
         {
             Memory = initialMemory.ToArray();
             ip = 0;
+            inputEnumerator = inputs.GetEnumerator();
         }
 
-        public void Run()
+        public IEnumerable<int> Run()
         {
             while (true)
             {
@@ -45,18 +47,20 @@
                             throw new Exception($"Invalid immediate parameter mode for parameter 1 opcode 3");
                         }
 
-                        Console.WriteLine($"Please enter a single integer:");
-                        int input;
-                        while (!int.TryParse(Console.ReadLine(), out input))
-                        {
-                            Console.WriteLine($"Please enter a valid integer");
-                        }
+                        //Console.WriteLine($"Please enter a single integer:");
+                        //int input;
+                        //while (!int.TryParse(Console.ReadLine(), out input))
+                        //{
+                        //    Console.WriteLine($"Please enter a valid integer");
+                        //}
+                        inputEnumerator.MoveNext();
+                        var input = inputEnumerator.Current;
 
                         Memory[Memory[ip + 1]] = input;
                         ip += 2;
                         break;
                     case 4:
-                        Console.WriteLine(getValue(Memory[ip+1], parameterMode1));
+                        yield return getValue(Memory[ip+1], parameterMode1);
                         ip += 2;
                         break;
                     case 5:
@@ -92,7 +96,8 @@
                 }
             }
 
-            halt:;
+        halt:;
+            yield break;
         }
 
         private int getValue(int parameter, int parameterMode)
