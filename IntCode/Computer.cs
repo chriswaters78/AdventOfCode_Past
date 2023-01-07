@@ -5,6 +5,7 @@ namespace IntCode
     public class Computer : IEnumerator<long>
     {
         public readonly long[] Memory;
+        private long rb;
         private long ip;
         private IEnumerator<long> inputEnumerator;
         private string name;
@@ -15,7 +16,7 @@ namespace IntCode
 
         public Computer(string name, long[] initialMemory, IEnumerator<long> inputEnumerator)
         {
-            Memory = initialMemory.ToArray();
+            Memory = initialMemory.Concat(Enumerable.Repeat((long)0, 10000)).ToArray();
             ip = 0;
             this.inputEnumerator = inputEnumerator;
             this.name = name;
@@ -39,9 +40,13 @@ namespace IntCode
                 var parameterMode2 = opCodeAndParameters / 1000 % 10;
                 var parameterMode3 = opCodeAndParameters / 10000 % 10;
 
-                var p1 = new Lazy<long>(() => getValue(Memory[ip + 1], parameterMode1));
-                var p2 = new Lazy<long>(() => getValue(Memory[ip + 2], parameterMode2));
-                var p3 = new Lazy<long>(() => getValue(Memory[ip + 3], parameterMode3));
+                var pref1 = new Lazy<long>(() => getRef(Memory[ip + 1], parameterMode1));
+                var pref2 = new Lazy<long>(() => getRef(Memory[ip + 2], parameterMode2));
+                var pref3 = new Lazy<long>(() => getRef(Memory[ip + 3], parameterMode3));
+
+                var plit1 = new Lazy<long>(() => getLit(Memory[ip + 1], parameterMode1));
+                var plit2 = new Lazy<long>(() => getLit(Memory[ip + 2], parameterMode2));
+                var plit3 = new Lazy<long>(() => getLit(Memory[ip + 3], parameterMode3));
 
                 switch (opCode)
                 {
@@ -54,7 +59,7 @@ namespace IntCode
                             throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
                         }
 
-                        Memory[Memory[ip + 3]] = opCode == 1 ? p1.Value + p2.Value : p1.Value * p2.Value;
+                        Memory[plit3.Value] = opCode == 1 ? pref1.Value + pref2.Value : pref1.Value * pref2.Value;
                         ip += 4;
                         break;
                     case 3:
@@ -65,18 +70,18 @@ namespace IntCode
                         inputEnumerator.MoveNext();
                         var input = inputEnumerator.Current;
                         Console.WriteLine($"Computer {name} received {input}");
-                        Memory[Memory[ip + 1]] = input;
+                        Memory[plit1.Value] = input;
                         ip += 2;
                         break;
                     case 4:
-                        current = getValue(Memory[ip + 1], parameterMode1);
+                        current = pref1.Value;
                         Console.WriteLine($"Computer {name} output {current}");
                         ip += 2;
                         return true;
                     case 5:
-                        if (getValue(Memory[ip + 1], parameterMode1) != 0)
+                        if (pref1.Value != 0)
                         {
-                            ip = getValue(Memory[ip + 2], parameterMode2);
+                            ip = pref2.Value;
                         }
                         else
                         {
@@ -84,9 +89,9 @@ namespace IntCode
                         }
                         break;
                     case 6:
-                        if (getValue(Memory[ip + 1], parameterMode1) == 0)
+                        if (pref1.Value == 0)
                         {
-                            ip = getValue(Memory[ip + 2], parameterMode2);
+                            ip = pref2.Value;
                         }
                         else
                         {
@@ -99,7 +104,7 @@ namespace IntCode
                             throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
                         }
 
-                        Memory[Memory[ip + 3]] = getValue(Memory[ip + 1], parameterMode1) < getValue(Memory[ip + 2], parameterMode2) ? 1 : 0;
+                        Memory[plit3.Value] = pref1.Value < pref2.Value ? 1 : 0;
                         ip += 4;
                         break;
                     case 8:
@@ -108,8 +113,12 @@ namespace IntCode
                             throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
                         }
 
-                        Memory[Memory[ip + 3]] = getValue(Memory[ip + 1], parameterMode1) == getValue(Memory[ip + 2], parameterMode2) ? 1 : 0;
+                        Memory[plit3.Value] = pref1.Value == pref2.Value ? 1 : 0;
                         ip += 4;
+                        break;
+                    case 9:
+                        rb += pref1.Value;
+                        ip += 2;
                         break;
 
                     default: throw new Exception($"Unexpected opcode {opCode}");
@@ -127,12 +136,24 @@ namespace IntCode
         }
 
 
-        private long getValue(long parameter, long parameterMode)
+        private long getRef(long parameter, long parameterMode)
         {
             switch (parameterMode)
             {
                 case 0: return Memory[parameter];
                 case 1: return parameter;
+                case 2: return Memory[parameter + rb];
+                default: throw new NotImplementedException();
+            }
+        }
+
+        private long getLit(long parameter, long parameterMode)
+        {
+            switch (parameterMode)
+            {
+                case 0: return parameter;
+                case 1: return parameter;
+                case 2: return parameter + rb;
                 default: throw new NotImplementedException();
             }
         }
