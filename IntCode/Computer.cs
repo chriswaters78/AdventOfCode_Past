@@ -7,15 +7,15 @@
         private IEnumerator<long> inputEnumerator;
         private string name;
 
-        public Computer(long[] initialMemory, IEnumerable<long> inputs) : this("COMP", initialMemory, inputs)
+        public Computer(long[] initialMemory, IEnumerator<long> inputEnumerator) : this("COMP", initialMemory, inputEnumerator)
         {
         }
 
-        public Computer(string name, long[] initialMemory, IEnumerable<long> inputs)
+        public Computer(string name, long[] initialMemory, IEnumerator<long> inputEnumerator)
         {
             Memory = initialMemory.ToArray();
             ip = 0;
-            inputEnumerator = inputs.GetEnumerator();
+            this.inputEnumerator = inputEnumerator;
             this.name = name;
         }
 
@@ -29,6 +29,10 @@
                 var parameterMode2 = opCodeAndParameters / 1000 % 10;
                 var parameterMode3 = opCodeAndParameters / 10000 % 10;
 
+                var p1 = new Lazy<long>(() => getValue(Memory[ip + 1], parameterMode1));
+                var p2 = new Lazy<long>(() => getValue(Memory[ip + 2], parameterMode2));
+                var p3 = new Lazy<long>(() => getValue(Memory[ip + 3], parameterMode3));
+
                 switch (opCode)
                 {
                     case 99:
@@ -40,10 +44,7 @@
                             throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
                         }
 
-                        var p1 = getValue(Memory[ip + 1], parameterMode1);
-                        var p2 = getValue(Memory[ip + 2], parameterMode2);
-                        var outputAddress = Memory[ip + 3];
-                        Memory[outputAddress] = opCode == 1 ? p1 + p2 : p1 * p2;
+                        Memory[Memory[ip + 3]] = opCode == 1 ? p1.Value + p2.Value : p1.Value * p2.Value;
                         ip += 4;
                         break;
                     case 3:
@@ -51,13 +52,6 @@
                         {
                             throw new Exception($"Invalid immediate parameter mode for parameter 1 opcode 3");
                         }
-
-                        //Console.WriteLine($"Please enter a single integer:");
-                        //int input;
-                        //while (!int.TryParse(Console.ReadLine(), out input))
-                        //{
-                        //    Console.WriteLine($"Please enter a valid integer");
-                        //}
                         inputEnumerator.MoveNext();
                         var input = inputEnumerator.Current;
                         Console.WriteLine($"Computer {name} received {input}");
@@ -66,7 +60,7 @@
                         ip += 2;
                         break;
                     case 4:
-                        var output = -getValue(Memory[ip + 1], parameterMode1);
+                        var output = getValue(Memory[ip + 1], parameterMode1);
                         Console.WriteLine($"Computer {name} output {output}");
                         yield return output;
                         ip += 2;
@@ -92,10 +86,20 @@
                         }
                         break;
                     case 7:
+                        if (parameterMode3 == 1)
+                        {
+                            throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
+                        }
+
                         Memory[Memory[ip + 3]] = getValue(Memory[ip + 1], parameterMode1) < getValue(Memory[ip + 2], parameterMode2) ? 1 : 0;
                         ip += 4;
                         break;
                     case 8:
+                        if (parameterMode3 == 1)
+                        {
+                            throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
+                        }
+
                         Memory[Memory[ip + 3]] = getValue(Memory[ip + 1], parameterMode1) == getValue(Memory[ip + 2], parameterMode2) ? 1 : 0;
                         ip += 4;
                         break;
