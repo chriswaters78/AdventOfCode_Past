@@ -1,6 +1,8 @@
-﻿namespace IntCode
+﻿using System.Collections;
+
+namespace IntCode
 {
-    public class Computer
+    public class Computer : IEnumerator<long>
     {
         public readonly long[] Memory;
         private long ip;
@@ -19,7 +21,15 @@
             this.name = name;
         }
 
-        public IEnumerable<long> Run()
+        private long current;
+        public long Current => current;
+        object IEnumerator.Current => current;
+
+        public void Dispose()
+        {
+        }
+
+        public bool MoveNext()
         {
             while (true)
             {
@@ -55,16 +65,14 @@
                         inputEnumerator.MoveNext();
                         var input = inputEnumerator.Current;
                         Console.WriteLine($"Computer {name} received {input}");
-
                         Memory[Memory[ip + 1]] = input;
                         ip += 2;
                         break;
                     case 4:
-                        var output = getValue(Memory[ip + 1], parameterMode1);
-                        Console.WriteLine($"Computer {name} output {output}");
-                        yield return output;
+                        current = getValue(Memory[ip + 1], parameterMode1);
+                        Console.WriteLine($"Computer {name} output {current}");
                         ip += 2;
-                        break;
+                        return true;
                     case 5:
                         if (getValue(Memory[ip + 1], parameterMode1) != 0)
                         {
@@ -109,8 +117,15 @@
             }
 
         halt:;
-            yield break;
+            Console.WriteLine($"Computer {name} halted");
+            return false;
         }
+
+        public void Reset()
+        {
+            throw new NotImplementedException();
+        }
+
 
         private long getValue(long parameter, long parameterMode)
         {
