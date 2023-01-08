@@ -9,17 +9,19 @@ namespace IntCode
         private long ip;
         private IEnumerator<long> inputEnumerator;
         private string name;
+        private readonly bool log;
 
         public Computer(long[] initialMemory, IEnumerator<long> inputEnumerator) : this("COMP", initialMemory, inputEnumerator)
         {
         }
 
-        public Computer(string name, long[] initialMemory, IEnumerator<long> inputEnumerator)
+        public Computer(string name, long[] initialMemory, IEnumerator<long> inputEnumerator, bool log = true)
         {
             Memory = initialMemory.Concat(Enumerable.Repeat((long)0, 10000)).ToArray();
             ip = 0;
             this.inputEnumerator = inputEnumerator;
             this.name = name;
+            this.log = log;
         }
 
         private long current;
@@ -55,63 +57,48 @@ namespace IntCode
                     case 1:
                     case 2:
                         if (parameterMode3 == 1)
-                        {
                             throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
-                        }
 
                         Memory[plit3.Value] = opCode == 1 ? pref1.Value + pref2.Value : pref1.Value * pref2.Value;
                         ip += 4;
                         break;
                     case 3:
                         if (parameterMode1 == 1)
-                        {
                             throw new Exception($"Invalid immediate parameter mode for parameter 1 opcode 3");
-                        }
+                        
                         inputEnumerator.MoveNext();
                         var input = inputEnumerator.Current;
-                        Console.WriteLine($"Computer {name} received {input}");
+                        if (log) Console.WriteLine($"Computer {name} received {input}");
                         Memory[plit1.Value] = input;
                         ip += 2;
                         break;
                     case 4:
                         current = pref1.Value;
-                        Console.WriteLine($"Computer {name} output {current}");
+                        if (log) Console.WriteLine($"Computer {name} output {current}");
                         ip += 2;
                         return true;
                     case 5:
                         if (pref1.Value != 0)
-                        {
                             ip = pref2.Value;
-                        }
                         else
-                        {
                             ip += 3;
-                        }
                         break;
                     case 6:
                         if (pref1.Value == 0)
-                        {
                             ip = pref2.Value;
-                        }
                         else
-                        {
                             ip += 3;
-                        }
                         break;
                     case 7:
                         if (parameterMode3 == 1)
-                        {
                             throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
-                        }
 
                         Memory[plit3.Value] = pref1.Value < pref2.Value ? 1 : 0;
                         ip += 4;
                         break;
                     case 8:
                         if (parameterMode3 == 1)
-                        {
                             throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
-                        }
 
                         Memory[plit3.Value] = pref1.Value == pref2.Value ? 1 : 0;
                         ip += 4;
@@ -126,7 +113,10 @@ namespace IntCode
             }
 
         halt:;
-            Console.WriteLine($"Computer {name} halted");
+            if (log)
+            {
+                Console.WriteLine($"Computer {name} halted");
+            }
             return false;
         }
 
