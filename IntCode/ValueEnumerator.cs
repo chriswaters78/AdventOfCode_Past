@@ -9,10 +9,11 @@ namespace IntCode
 {
     public class ValueEnumerator : IEnumerator<long>
     {
+        public Func<long,long> ValueProducer = (long value) => value + 1;
         public long Value = 0;
-        public long Current => Value;
+        public long Current => ValueProducer(Value);
 
-        object IEnumerator.Current => Value;
+        object IEnumerator.Current => Current;
 
         public void Dispose()
         {

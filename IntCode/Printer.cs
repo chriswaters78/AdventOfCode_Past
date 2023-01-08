@@ -8,7 +8,7 @@ namespace IntCode
 {
     public static class Printer
     {
-        public static string PrintGridMap(Dictionary<(int x, int y), long> gridMap, Func<long, char> printer)
+        public static string PrintGridMap(Dictionary<(int x, int y), char> gridMap)
         {
             var minX = gridMap.Keys.Min(tp => tp.x);
             var maxX = gridMap.Keys.Max(tp => tp.x);
@@ -24,10 +24,14 @@ namespace IntCode
             foreach (var kvp in gridMap)
             {
                 var y = kvp.Key.y - minY;
-                sbs[y][kvp.Key.x - minX] = printer(kvp.Value);
+                sbs[y][kvp.Key.x - minX] = kvp.Value;
             }
 
             return String.Join(Environment.NewLine, sbs);
+        }
+        public static string PrintGridMap(Dictionary<(int x, int y), long> gridMap, Func<long, char> printer)
+        {
+            return PrintGridMap(gridMap.ToDictionary(kvp => kvp.Key, kvp => printer(kvp.Value)));
         }
 
     }
