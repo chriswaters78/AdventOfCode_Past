@@ -9,13 +9,13 @@ namespace IntCode
 {
     public static class ConsoleEnumerable
     {
-        public static IEnumerable<int> GetConsoleEnumerable()
+        public static IEnumerable<long> GetConsoleEnumerable()
         {
             while (true)
             {
-                int input;
+                long input;
                 Console.WriteLine($"Please enter a integer:");
-                while (!int.TryParse(Console.ReadLine(), out input))
+                while (!long.TryParse(Console.ReadLine(), out input))
                 {
                     Console.WriteLine($"Not an integer!");
                 }
