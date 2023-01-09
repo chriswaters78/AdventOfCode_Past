@@ -3,7 +3,7 @@
 var memory = File.ReadAllText("input.txt").Split(",").Select(long.Parse).ToArray();
 
 Console.WriteLine($"*** START ***");
-var computer = new Computer(memory, ConsoleEnumerable.GetConsoleEnumerable().GetEnumerator());
+var computer = new Computer(memory, ConsoleNumericEnumerable.GetConsoleEnumerable().GetEnumerator());
 
 while (computer.MoveNext())
 {

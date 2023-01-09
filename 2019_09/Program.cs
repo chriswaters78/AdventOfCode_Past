@@ -13,7 +13,7 @@ Console.WriteLine($"*** STOP ***");
 
 static long part1(long[] input)
 {
-    var boost = new Computer("BOOST", input.ToArray(), ConsoleEnumerable.GetConsoleEnumerable().GetEnumerator());
+    var boost = new Computer("BOOST", input.ToArray(), ConsoleNumericEnumerable.GetConsoleEnumerable().GetEnumerator());
     while (boost.MoveNext())
     {
     }
