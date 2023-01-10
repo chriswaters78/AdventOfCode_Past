@@ -16,7 +16,7 @@ namespace IntCode
         {
         }
 
-        public Computer(string name, long[] initialMemory, IEnumerator<long> inputEnumerator, bool log = true)
+        public Computer(string name, long[] initialMemory, IEnumerator<long> inputEnumerator, bool log = false)
         {
             Memory = initialMemory.Concat(Enumerable.Repeat((long)0, 10000)).ToArray();
             ip = 0;
@@ -65,7 +65,7 @@ namespace IntCode
                         break;
                     case 3:
                         if (parameterMode1 == 1) throw new Exception($"Invalid immediate parameter mode for parameter 1 opcode 3");
-                        inputEnumerator.MoveNext();
+                        if (!inputEnumerator.MoveNext()) throw new Exception($"Expected further input");
                         var input = inputEnumerator.Current;
                         if (log) Console.WriteLine($"Computer {Name} received {input}");
                         Memory[plit1.Value] = input;
@@ -108,10 +108,7 @@ namespace IntCode
             }
 
         halt:;
-            if (log)
-            {
-                Console.WriteLine($"Computer {Name} halted");
-            }
+            if (log) Console.WriteLine($"Computer {Name} halted");
             return false;
         }
 
