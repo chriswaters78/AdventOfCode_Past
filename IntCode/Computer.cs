@@ -40,6 +40,7 @@ namespace IntCode
                 Steps++;
                 var opCodeAndParameters = Memory[ip];
                 var opCode = opCodeAndParameters % 100;
+
                 var parameterMode1 = opCodeAndParameters / 100 % 10;
                 var parameterMode2 = opCodeAndParameters / 1000 % 10;
                 var parameterMode3 = opCodeAndParameters / 10000 % 10;
@@ -58,16 +59,12 @@ namespace IntCode
                         goto halt;
                     case 1:
                     case 2:
-                        if (parameterMode3 == 1)
-                            throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
-
+                        if (parameterMode3 == 1) throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
                         Memory[plit3.Value] = opCode == 1 ? pref1.Value + pref2.Value : pref1.Value * pref2.Value;
                         ip += 4;
                         break;
                     case 3:
-                        if (parameterMode1 == 1)
-                            throw new Exception($"Invalid immediate parameter mode for parameter 1 opcode 3");
-                        
+                        if (parameterMode1 == 1) throw new Exception($"Invalid immediate parameter mode for parameter 1 opcode 3");
                         inputEnumerator.MoveNext();
                         var input = inputEnumerator.Current;
                         if (log) Console.WriteLine($"Computer {Name} received {input}");
@@ -92,16 +89,12 @@ namespace IntCode
                             ip += 3;
                         break;
                     case 7:
-                        if (parameterMode3 == 1)
-                            throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
-
+                        if (parameterMode3 == 1) throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
                         Memory[plit3.Value] = pref1.Value < pref2.Value ? 1 : 0;
                         ip += 4;
                         break;
                     case 8:
-                        if (parameterMode3 == 1)
-                            throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
-
+                        if (parameterMode3 == 1) throw new Exception($"Invalid immediate parameter mode for parameter 3, opcode {opCode}");
                         Memory[plit3.Value] = pref1.Value == pref2.Value ? 1 : 0;
                         ip += 4;
                         break;
@@ -143,8 +136,8 @@ namespace IntCode
         {
             switch (parameterMode)
             {
-                case 0: return parameter;
-                case 1: return parameter;
+                case 0: return parameter;                
+                //case 1: NOTVALID
                 case 2: return parameter + rb;
                 default: throw new NotImplementedException();
             }
