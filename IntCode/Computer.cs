@@ -8,7 +8,7 @@ namespace IntCode
         private long rb;
         private long ip;
         private IEnumerator<long> inputEnumerator;
-        private string name;
+        public readonly string Name;
         private readonly bool log;
         public int Steps = 0;
 
@@ -21,7 +21,7 @@ namespace IntCode
             Memory = initialMemory.Concat(Enumerable.Repeat((long)0, 10000)).ToArray();
             ip = 0;
             this.inputEnumerator = inputEnumerator;
-            this.name = name;
+            this.Name = name;
             this.log = log;
         }
 
@@ -70,13 +70,13 @@ namespace IntCode
                         
                         inputEnumerator.MoveNext();
                         var input = inputEnumerator.Current;
-                        if (log) Console.WriteLine($"Computer {name} received {input}");
+                        if (log) Console.WriteLine($"Computer {Name} received {input}");
                         Memory[plit1.Value] = input;
                         ip += 2;
                         break;
                     case 4:
                         current = pref1.Value;
-                        if (log) Console.WriteLine($"Computer {name} output {current}");
+                        if (log) Console.WriteLine($"Computer {Name} output {current}");
                         ip += 2;
                         return true;
                     case 5:
@@ -117,7 +117,7 @@ namespace IntCode
         halt:;
             if (log)
             {
-                Console.WriteLine($"Computer {name} halted");
+                Console.WriteLine($"Computer {Name} halted");
             }
             return false;
         }
