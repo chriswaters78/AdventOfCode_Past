@@ -10,6 +10,7 @@ namespace IntCode
         private IEnumerator<long> inputEnumerator;
         private string name;
         private readonly bool log;
+        public int Steps = 0;
 
         public Computer(long[] initialMemory, IEnumerator<long> inputEnumerator) : this("COMP", initialMemory, inputEnumerator)
         {
@@ -36,6 +37,7 @@ namespace IntCode
         {
             while (true)
             {
+                Steps++;
                 var opCodeAndParameters = Memory[ip];
                 var opCode = opCodeAndParameters % 100;
                 var parameterMode1 = opCodeAndParameters / 100 % 10;
