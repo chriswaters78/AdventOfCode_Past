@@ -16,10 +16,11 @@ Console.WriteLine($"*** STOP ***");
 static long part2(long[] input)
 {
     var joystick = new ValueEnumerator();
+
     joystick.Value = -1;
     var game = new Computer("GAME", input.ToArray(), joystick, false);
 
-    var screen = new Dictionary<(int x, int y), long>();
+    var screen = new Dictionary<(int x, int y),  long>();
     var SCORE = (-1, 0);
     long score = long.MinValue;
     (int x, int y) ball = (-1, -1);
@@ -45,9 +46,14 @@ static long part2(long[] input)
         paddle = (tileid == 3) ? (x, y) : paddle;
         ball = (tileid == 4) ? (x, y) : ball;
 
-        joystick.Value = -Math.Sign(paddle.x - ball.x);
 
         Console.WriteLine(Printer.PrintGridMap(screen, printer));
+
+        var newValue = -Math.Sign(paddle.x - ball.x);
+        if (joystick.Value != newValue)
+        {
+            joystick.Value = newValue; 
+        }
     }
 
     return score;

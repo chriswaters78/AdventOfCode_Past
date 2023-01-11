@@ -6,25 +6,30 @@ using System.Text;
 var input = File.ReadAllText("input.txt").Split(",").Select(long.Parse).ToArray();
 
 Console.WriteLine($"*** START ***");
-Console.WriteLine($"Part 2: {part1(input)}");
+
+(var part1, var part2) = solve(input);
+Console.WriteLine($"Part 1: {part1}");
+Console.WriteLine($"Part 2: {part2}");
 
 Console.WriteLine($"*** STOP ***");
 
-static long part1(long[] input)
+static (long, long) solve(long[] input)
 {
     var joystick = new ValueEnumerator();
+    joystick.ValueProducer = l => l + 1;
 
     var repairBot = new Computer("REPAIR", input.ToArray(), joystick, false);
 
     var maze = new Dictionary<(int x, int y), char>();
     dfs(maze, (0, 0), repairBot, joystick);
 
-    var minSteps = bfs(maze, maze.Single(kvp => kvp.Value == 'G').Key);
+    var part1 = bfs(maze, maze.Single(kvp => kvp.Value == 'S').Key, maze.Single(kvp => kvp.Value == 'G').Key);
+    var part2 = bfs(maze, maze.Single(kvp => kvp.Value == 'G').Key, null);
     Console.WriteLine(Printer.PrintGridMap(maze));
-    return -1;
+    return (part1, part2);
 }
-static int bfs(Dictionary<(int x, int y), char> graph, (int x, int y) startPos)
-{
+static int bfs(Dictionary<(int x, int y), char> graph, (int x, int y) startPos, (int x, int y)? endPos)
+{ 
     var furthest = int.MinValue;
     var visited = new HashSet<(int x, int y)>();
     Queue<((int x, int y) pos, int steps)> positions = new Queue<((int x, int y) pos, int steps)> ();
@@ -35,10 +40,10 @@ static int bfs(Dictionary<(int x, int y), char> graph, (int x, int y) startPos)
         var pos = positions.Dequeue();
         furthest = Math.Max(pos.steps, furthest);
         visited.Add(pos.pos);
-        //if (graph[pos.pos] == 'G')
-        //{
-        //    return pos.steps;
-        //}
+        if (pos.pos == endPos)
+        {
+            return pos.steps;
+        }
         for (int d = 0; d < dirs.Length; d++)
         {
             var newPos = (pos.pos.x + dirs[d].ox, pos.pos.y + dirs[d].oy);
