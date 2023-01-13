@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Rationals;
+using System;
 using System.Diagnostics;
 
 public class Program
@@ -96,21 +97,25 @@ public class Program
         }
     }
 
-    static double pseudoAngle(double dx, double dy)
+    static Rational pseudoAngle(int dx, int dy)
     {
         bool diag = dy > dx;
         bool adiag = dy > -dx;
 
-        double r = !adiag ? 4 : 0;
+        int r = !adiag ? 4 : 0;
 
         if (dx == 0)
             return (12 - r) % 8;
 
+        Rational rr = r;
         if (diag ^ adiag)
-            r += 2 - dy / dx;
+            rr += 2 - new Rational(dy, dx);
         else
-            r += dx / dy;
+            rr += new Rational(dx, dy);
 
-        return (12 - r) % 8;
+        rr = 12 - rr;
+        if (rr >= 8)
+            rr -= 8;
+        return rr;
     }
 }
