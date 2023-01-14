@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "2019_10": {
+      "commandName": "Project",
+      "commandLineArgs": "input"
+    }
+  }
+}
