@@ -21,7 +21,8 @@
                 var output = new int[input.Length];
                 Parallel.For(0, input.Length, i =>
                 {
-                    output[i] = Math.Abs(input.Zip(GetMask(i + finalOffset).Skip(finalOffset)).Sum(tp => tp.First * tp.Second)) % 10;
+                    //output[i] = Math.Abs(input.Zip(GetMask(i + finalOffset).Skip(finalOffset)).Sum(tp => tp.First * tp.Second)) % 10;
+                    output[i] = input.Skip(i).Sum() % 10;
                 });
                 input = output;
                 Console.WriteLine($"Phase {phase} done");
