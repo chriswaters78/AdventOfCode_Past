@@ -19,11 +19,17 @@
             for (int phase = 0; phase < PHASES; phase++)
             {
                 var output = new int[input.Length];
-                Parallel.For(0, input.Length, i =>
+                int last = 0;
+                for (int i = output.Length - 1; i >= 0; i--)
                 {
-                    //output[i] = Math.Abs(input.Zip(GetMask(i + finalOffset).Skip(finalOffset)).Sum(tp => tp.First * tp.Second)) % 10;
-                    output[i] = input.Skip(i).Sum() % 10;
-                });
+                    output[i] = (input[i] + last) % 10;
+                    last = output[i];
+                }
+                //Parallel.For(0, input.Length, i =>
+                //{
+                    //output[i] = Math.Abs(input.Zip(GetMask(i)).Sum(tp => tp.First * tp.Second)) % 10;
+                    //output[i] = input.Skip(i).Sum() % 10;
+                //});
                 input = output;
                 Console.WriteLine($"Phase {phase} done");
             }
