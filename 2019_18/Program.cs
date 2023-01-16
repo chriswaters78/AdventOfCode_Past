@@ -17,11 +17,11 @@ namespace _2019_18
         {
             Stopwatch watch = new Stopwatch();
             watch.Start();
-            maze = File.ReadAllLines("input.txt").SelectMany((line, r) => line.Select((ch, c) => (r, c, ch)))
+            maze = File.ReadAllLines("part2.txt").SelectMany((line, r) => line.Select((ch, c) => (r, c, ch)))
                 .Where(tp => tp.ch != '#')
                 .ToDictionary(tp => (tp.r, tp.c), tp => tp.ch);
 
-            var start = maze.Single(kvp => kvp.Value == '@').Key;
+            var start = maze.First(kvp => kvp.Value == '@').Key;
             var keyCount = maze.Count(kvp => Char.IsLower(kvp.Value));
             var allKeys = maze.Values.Where(ch => Char.IsLower(ch)).OrderBy(ch => ch).ToArray();
             uint finalKeys = 0;
@@ -40,17 +40,22 @@ namespace _2019_18
         static void solve(State state)
         {
             cache.Add(state, 0);
-            Queue<State> queue = new Queue<State>();
-            queue.Enqueue(state);
+            var queue = new Queue<(State state, (int r, int c) lastPosition)>();
+            queue.Enqueue((state, (-1,-1)));
 
             while (queue.Count > 0)
             {
-                state = queue.Dequeue();
+                (state, var lastPosition) = queue.Dequeue();
                 var t = cache[state];
 
                 //we can move to any of the 4 spaces around
                 foreach (var edge in new[] { (0, 1), (0, -1), (1, 0), (-1, 0) }.Select(tp => (state.pos.r + tp.Item1, state.pos.c + tp.Item2)))
                 {
+                    if (lastPosition == edge)
+                    {
+                        //never backtrack, clear lastPosition if we find a key
+                        continue;
+                    }
                     if (!maze.ContainsKey(edge))
                     {
                         continue;
@@ -61,10 +66,11 @@ namespace _2019_18
                         continue;
                     }
 
+                    var isKey = Char.IsLower(maze[edge]) && !IsBitSet(maze[edge] - 'a', state.s.keys);
                     State newState = state with
                     {
                         pos = edge,
-                        s = Char.IsLower(maze[edge]) && !IsBitSet(maze[edge] - 'a', state.s.keys)
+                        s = isKey
                             ? (SetBit(maze[edge] - 'a', state.s.keys), state.s.keyCount + 1)
                             : state.s
                     };
@@ -75,7 +81,7 @@ namespace _2019_18
                         continue;
                     }
                     cache[newState] = t + 1;
-                    queue.Enqueue(newState);
+                    queue.Enqueue((newState, isKey ? (-1,-1) : state.pos));
                 }
             }
         }
