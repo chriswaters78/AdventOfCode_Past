@@ -9,6 +9,21 @@ public class Program
         Stopwatch watch = new Stopwatch();
         watch.Start();
 
+        var testPoints = new List<(double x, double y)>()
+        {
+            (0, 0),
+            (0, 1),
+            (1, 1),
+            (1, 0),
+            (1, -1),
+            (0,-1),
+            (-1,-1),
+            (-1,0),
+            (-1,1)
+        };
+
+        var result = ChatGPT.MeasureAngles(testPoints);
+
         var input = args.Length > 0 ? args[0] : "input";
         
         var grid = File.ReadAllLines($"{input}.txt").SelectMany((line, y) => line.Select((ch, x) => (y, x, ch)))
@@ -117,5 +132,26 @@ public class Program
         if (rr >= 8)
             rr -= 8;
         return rr;
+    }
+
+    static double pseudoAngle(double dx, double dy)
+    {
+        bool diag = dy > dx;
+        bool adiag = dy > -dx;
+
+        double r = !adiag ? 4 : 0;
+
+        if (dx == 0)
+            return (12 - r) % 8;
+
+        if (diag ^ adiag)
+            r += 2 - dy / dx;
+        else
+            r += dx / dy;
+
+        r = 12 - r;
+        if (r >= 8)
+            r -= 8;
+        return r;
     }
 }
