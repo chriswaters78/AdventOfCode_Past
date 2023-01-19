@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 
 namespace _2019_20
 {
@@ -8,18 +9,7 @@ namespace _2019_20
     {
         static void Main(string[] args)
         {
-            //uint state = 0;
-            //state = SetValue(0, 3, state);
-            //unchecked
-            //{
-            //    state = SetValue(1, (byte)-1, state);
-
-            //    var t3 = (sbyte)GetValue(2, state);
-            //}
-
-            //var t5 = GetValue(1, state);
-
-            //part1();
+            part1();
 
             var x = simulateAxis(0);
             var y = simulateAxis(1);
@@ -29,6 +19,7 @@ namespace _2019_20
             {
                 throw new Exception($"Chinese Remainder problem!");
             }
+
             var dx = new BigInteger(x.Item1 - x.Item2);
             var dy = new BigInteger(y.Item1 - y.Item2);
             var dz = new BigInteger(z.Item1 - z.Item2);
@@ -39,38 +30,26 @@ namespace _2019_20
 
             var lcm = _lcm * dz / gcd;
 
-
-
-            //xRepeat = 505
-            //yRepeat = 2415
-            //zRepeat = 1314
-            //LCM = 1602521550
-            if (true)
-            {
-            }
+            Console.WriteLine($"Part 2: {lcm}");
         }
         static (int, int) simulateAxis(int axis)
         {
-            sbyte[] positions = File.ReadAllLines("input.txt").Select(line =>
+            int[] positions = File.ReadAllLines("input.txt").Select(line =>
             {
                 var arr = line.Trim('<').Trim('>').Split(", ");
-                return sbyte.Parse(arr[axis][2..]);
+                return int.Parse(arr[axis][2..]);
             }).ToArray();
 
-            sbyte[] velocities = new sbyte[positions.Length];
+            int[] velocities = new int[positions.Length];
 
-            (uint pos, uint vel) state = (0, 0);
-            for (int i = 0; i < positions.Length; i++)
-            {
-                state.pos = SetValue(i, (byte) positions[i], state.pos);
-                state.vel = SetValue(i, (byte) velocities[i], state.vel);
-            }
-
-            var previous = new Dictionary<(uint positions, uint velocities), int>();
+            
+            (int[] pos, int[] vel) state = (positions, velocities);
+            var previous = new Dictionary<(int[] pos, int[] vel), int>(new ArrayComparer());
             int steps = 0;
             while (!previous.ContainsKey(state))
             {
                 previous.Add(state, steps);
+                state = (state.pos.ToArray(), state.vel.ToArray());
                 steps++;
                 for (int m1 = 0; m1 < positions.Length; m1++)
                 {
@@ -86,19 +65,19 @@ namespace _2019_20
                             continue;
                         }
 
-                        var m2Pos = GetValue(m2, state.pos);
-                        var m1Pos = GetValue(m1, state.pos);
-                        var m1Vel = GetValue(m1, state.vel);
-                        var dv = (sbyte) (m1Vel + Math.Sign(m2Pos - m1Pos));
-                        state.vel = SetValue(m1, (byte) dv, state.vel);
+                        var m2Pos = state.pos[m2];
+                        var m1Pos = state.pos[m1];
+                        var m1Vel = state.vel[m1];
+                        var dv = m1Vel + Math.Sign(m2Pos - m1Pos);
+                        state.vel[m1] = dv;
                     }
                 }
 
                 for (int m = 0; m < positions.Length; m++)
                 {
-                    var v = GetValue(m, state.vel);
-                    var p = GetValue(m, state.pos);
-                    state.pos = SetValue(m, (byte) (p + v), state.pos);
+                    var v = state.vel[m];
+                    var p = state.pos[m];
+                    state.pos[m] = p + v;
                 }
             }
 
@@ -179,4 +158,25 @@ namespace _2019_20
     }
 }
 
+public class ArrayComparer : IEqualityComparer<(int[] positions, int[] velocities)>
+{
+
+    public bool Equals((int[], int[]) x, (int[], int[]) y)
+    {
+        return x.Item1.SequenceEqual(y.Item1) && x.Item2.SequenceEqual(y.Item2);
+    }
+
+
+    public int GetHashCode([DisallowNull] (int[], int[]) obj)
+    {
+        int code = 0;
+        for (int i = 0; i < obj.Item1.Length; i++)
+        {
+            code ^= obj.Item1[i].GetHashCode();
+            code ^= obj.Item2[i].GetHashCode();
+        }
+
+        return code;
+    }
+}
 
