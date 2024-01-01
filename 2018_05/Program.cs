@@ -1,20 +1,27 @@
-﻿// See https://aka.ms/new-console-template for more information
-var input = new LinkedList<char>(File.ReadAllText("test.txt"));
+﻿var input = File.ReadAllText("input.txt");
 
-var current = input.First;
-while (current.Next != null)
+Console.WriteLine($"Part 1: {reduce(new LinkedList<char>(input)).Count}");
+Console.WriteLine($"Part 2: {input.Select(ch => Char.ToLower(ch)).Distinct().Min(without => reduce(new LinkedList<char>(input.Where(ch => Char.ToLower(ch) != without))).Count)}");
+
+LinkedList<char> reduce(LinkedList<char> list)
 {
-    if ((char.IsLower(current.Value) && char.ToUpper(current.Value) == current.Next.Value)
-        || (char.IsUpper(current.Value) && char.ToLower(current.Value) == current.Next.Value))
+    var current = list.First;
+    while (current.Next != null)
     {
-        input.Remove(current.Next);
-        input.Remove(current);
-        current = input.First;
-    }
-    else
-    {
-        current = current.Next;
-    }
-}
+        if ((char.ToLower(current.Value) == char.ToLower(current.Next.Value))
+            && (char.IsUpper(current.Value) ^ char.IsUpper(current.Next.Value)))
+        {
+            var previous = current.Previous;
+            list.Remove(current.Next);
+            list.Remove(current);
 
-Console.WriteLine($"Part 1: {input.Count}");
+            current = previous ?? list.First;
+        }
+        else
+        {
+            current = current.Next;
+        }
+    }
+
+    return list;
+}
